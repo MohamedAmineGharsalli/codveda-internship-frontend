@@ -1,17 +1,28 @@
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import axios from 'axios';
+import AuthContext from '../context/AuthContext';
 
 export default function AddUserForm() {
+  const { user, logout } = useContext(AuthContext);
   const [form, setForm] = useState({ name: '', email: '' });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:5000/api/users', form);
+      await axios.post('http://localhost:5000/api/users', form, {
+        headers: {
+          Authorization: `Bearer ${user?.token}`
+        }
+      });
       setForm({ name: '', email: '' });
       alert('User added!');
     } catch (err) {
-      console.error(err.response?.data?.error);
+      if (err.response && err.response.status === 401) {
+        alert('Session expired. Please log in again.');
+        logout();
+      } else {
+        console.error(err.response?.data?.error);
+      }
     }
   };
 
